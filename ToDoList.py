@@ -65,8 +65,33 @@ def task_for_today():
 
 def all_tasks():
     print('All tasks: ')
-    for task_id, task, date in session.query(Table.id, Table.task, Table.deadline):
-        print(f"{task_id}. {task}. {date.day} {date.strftime('%b')}")
+    for index, task_date in enumerate(session.query(Table.task, Table.deadline).all()):
+        print(f"{index + 1}. {task_date[0]}. {task_date[1].day} {task_date[1].strftime('%b')}")
+
+
+def missed_tasks():
+    print('Missed tasks:')
+    if not session.query(Table).filter(Table.deadline < datetime.today()).all():
+        print('Nothing is missed!')
+    else:
+        for index, task_date in enumerate(session.query(Table.task, Table.deadline).filter(
+                Table.deadline < datetime.today()).order_by(Table.deadline)):
+            print(f"{index + 1}. {task_date[0]}. {task_date[1].day} {task_date[1].strftime('%b')}")
+
+
+def delete_task():
+    if not session.query(Table).all():
+        print('Nothing to delete')
+    else:
+        print('Chose the number of the task you want to delete:')
+        for index, task_date in enumerate(session.query(Table.task, Table.deadline).order_by(Table.deadline)):
+            print(f"{index + 1}. {task_date[0]}. {task_date[1].day} {task_date[1].strftime('%b')}")
+        task_number_to_delete = int(input())
+        rows = session.query(Table).all()
+        row_to_delete = rows[task_number_to_delete - 1]
+        session.delete(row_to_delete)
+        session.commit()
+        print('The task has been deleted!')
 
 
 def exit_to_do_list():
@@ -77,7 +102,7 @@ def exit_to_do_list():
 
 def menu():
     while to_do_list_loop:
-        print("1) Today's tasks\n2) Week's tasks\n3) All tasks\n4) Add task\n0) Exit")
+        print("1) Today's tasks\n2) Week's tasks\n3) All tasks\n4) Missed tasks\n5) Add task\n6) Delete Task\n0) Exit")
         user_input = input()
         if user_input == '1':
             print()
@@ -92,7 +117,15 @@ def menu():
             print()
         elif user_input == '4':
             print()
+            missed_tasks()
+            print()
+        elif user_input == '5':
+            print()
             add_task()
+            print()
+        elif user_input == '6':
+            print()
+            delete_task()
             print()
         elif user_input == '0':
             print()
